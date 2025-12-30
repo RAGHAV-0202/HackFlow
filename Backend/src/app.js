@@ -27,7 +27,7 @@ app.use(helmet())
 
 
 const corsOptions = {
-    origin: ['http://localhost:8080' , "https://lovable.dev"],
+    origin: ['http://localhost:8080' , "https://lovable.dev" , "https://lovableproject.com"],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
     credentials: true ,
