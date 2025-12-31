@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import EmptyState from '@/components/common/EmptyState';
-import { hackathonApi, userApi } from '@/lib/api';
+import { hackathonApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Hackathon, User } from '@/types';
 
@@ -39,14 +39,12 @@ const AssignJudges = () => {
 
   const fetchData = async () => {
     try {
-      const [hackathonRes, usersRes]: any = await Promise.all([
+      const [hackathonRes, judgesRes]: any = await Promise.all([
         hackathonApi.getById(id!),
-        userApi.getAllUsers(),
+        hackathonApi.getJudges(),
       ]);
       setHackathon(hackathonRes.data);
-      // Filter to only show users with judge role
-      const judges = (usersRes.data || []).filter((u: User) => u.role === 'judge');
-      setAllUsers(judges);
+      setAllUsers(judgesRes.data || []);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
