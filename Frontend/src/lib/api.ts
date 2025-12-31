@@ -174,10 +174,12 @@ export const evaluationApi = {
   getJudgeSubmissions: () => api.get('/judge/submissions'),
   
   getJudgeHackathonSubmissions: (hackathonId: string) => 
-    api.get(`/judge/hackathon/${hackathonId}/submissions`),
+    api.get(`/judge/${hackathonId}/submissions`),
   
   getJudgeRoundSubmissions: (roundId: string) => 
     api.get(`/judge/round/${roundId}/submissions`),
+  
+  getJudgeHackathons: () => api.get('/judge/hackathons'),
   
   getById: (id: string) => api.get(`/evaluations/${id}`),
   
