@@ -1,5 +1,5 @@
 import express from "express"
-import {create , getAll , getParticular , updateHackathon , deleteHackathon , joinHackathon , assignJudge , removeJudge , addRounds , updateRound , deleteRound} from "../controllers/hackathons.controllers.js"
+import {create , getAll , getParticular , updateHackathon , deleteHackathon , joinHackathon , assignJudge , removeJudge , addRounds , updateRound , deleteRound , allJudges} from "../controllers/hackathons.controllers.js"
 const router = express.Router();
 import { VerifyJWT } from "../middlewares/auth.middleware.js";
 import { isJudge , isAdmin , isOrganizer , allowRoles } from "../middlewares/role.middleware.js";
@@ -19,6 +19,7 @@ router.route("/delete/:id").post(VerifyJWT , allowRoles("admin" , "organizer") ,
 
 router.route("/join/:id").post(VerifyJWT , allowRoles("participant") , joinHackathon)
 
+router.route("/get-judges").post(VerifyJWT , allowRoles("admin" , "organizer") , allJudges)
 router.route("/assign-judge/:id").post(VerifyJWT , allowRoles("admin" , "organizer") , assignJudge)
 router.route("/remove-judge/:id").post(VerifyJWT , allowRoles("admin" , "organizer") , removeJudge)
 

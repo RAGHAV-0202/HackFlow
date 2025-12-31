@@ -563,6 +563,11 @@ const joinHackathon = asyncHandler(async (req, res) => {
   throw new apiError(501, "Join hackathon feature not yet implemented");
 });
 
+const allJudges = asyncHandler(async(req,res)=>{
+  const judges = await User.find({role : "judge"})
+  res.status(200).json(new ApiResponse(200 , judges , "all judges fetched"))
+})
+
 export {
   create,
   getAll,
@@ -574,5 +579,6 @@ export {
   removeJudge,
   addRounds,
   updateRound,
-  deleteRound
+  deleteRound,
+  allJudges
 };
