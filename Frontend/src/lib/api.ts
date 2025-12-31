@@ -97,6 +97,8 @@ export const hackathonApi = {
   
   removeJudge: (id: string, judgeId: string) =>
     api.post(`/hackathon/remove-judge/${id}`, { judgeId }),
+  
+  getJudges: () => api.post('/hackathon/get-judges'),
 };
 
 // Team API
