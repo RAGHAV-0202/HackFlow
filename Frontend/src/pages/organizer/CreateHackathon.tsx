@@ -177,10 +177,11 @@ const CreateHackathon = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date *</Label>
-              <Input
+              <Label htmlFor="startDate">Start Date & Time *</Label>
+              <input
                 id="startDate"
                 type="datetime-local"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
                 {...register('startDate')}
               />
               {errors.startDate && (
@@ -189,10 +190,11 @@ const CreateHackathon = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endDate">End Date *</Label>
-              <Input
+              <Label htmlFor="endDate">End Date & Time *</Label>
+              <input
                 id="endDate"
                 type="datetime-local"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
                 {...register('endDate')}
               />
               {errors.endDate && (
@@ -200,11 +202,12 @@ const CreateHackathon = () => {
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="registrationDeadline">Registration Deadline</Label>
-              <Input
+              <input
                 id="registrationDeadline"
                 type="datetime-local"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
                 {...register('registrationDeadline')}
               />
             </div>
