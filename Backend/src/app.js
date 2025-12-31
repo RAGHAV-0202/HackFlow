@@ -27,7 +27,7 @@ app.use(helmet())
 
 
 const corsOptions = {
-    origin: ['http://localhost:8080' , "https://lovable.dev" , "https://lovableproject.com" , "https://id-preview--4a6f51c3-95b2-4aa9-97c2-c06c19193efe.lovable.app"],
+    origin: ['http://localhost:8080' , "https://lovable.dev" , "https://lovableproject.com" , "https://id-preview--4a6f51c3-95b2-4aa9-97c2-c06c19193efe.lovable.app" , "https://hack-flow-eta.vercel.app"],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
     credentials: true ,
