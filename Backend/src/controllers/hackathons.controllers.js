@@ -573,6 +573,78 @@ const allJudges = asyncHandler(async(req,res)=>{
   res.status(200).json(new ApiResponse(200 , judges , "all judges fetched"))
 })
 
+const getJudgeSubmissions = asyncHandler(async (req, res) => {
+  const judge = req.user;
+
+  if (judge.role !== "judge") {
+    throw new apiError(403, "Only judges can access submissions");
+  }
+
+  if (!judge.hackathonsJoined || judge.hackathonsJoined.length === 0) {
+    return res.status(200).json(
+      new ApiResponse(200, [], "No hackathons assigned")
+    );
+  }
+
+  const submissions = await Submission.find({
+    hackathon: { $in: judge.hackathonsJoined }
+  })
+    .populate("hackathon", "title")
+    .populate("round", "name roundNumber")
+    .populate("team", "name projectName")
+    .populate("submittedBy", "name email")
+    .sort({ submittedAt: -1 });
+
+  return res.status(200).json(
+    new ApiResponse(200, submissions, "Judge submissions fetched")
+  );
+});
+
+const getJudgeHackathonSubmissions = asyncHandler(async (req, res) => {
+  const { hackathonId } = req.params;
+  const judge = req.user;
+
+  if (!judge.hackathonsJoined.includes(hackathonId)) {
+    throw new apiError(403, "You are not assigned to this hackathon");
+  }
+
+  const submissions = await Submission.find({
+    hackathon: hackathonId
+  })
+    .populate("round", "name roundNumber")
+    .populate("team", "name projectName")
+    .populate("submittedBy", "name email")
+    .sort({ submittedAt: -1 });
+
+  return res.status(200).json(
+    new ApiResponse(200, submissions, "Hackathon submissions fetched")
+  );
+});
+
+const getJudgeRoundSubmissions = asyncHandler(async (req, res) => {
+  const { roundId } = req.params;
+  const judge = req.user;
+
+  const submissions = await Submission.find({ round: roundId })
+    .populate("hackathon", "title")
+    .populate("team", "name projectName")
+    .populate("submittedBy", "name email");
+
+  // Authorization check (important)
+  const unauthorized = submissions.some(
+    s => !judge.hackathonsJoined.includes(s.hackathon._id.toString())
+  );
+
+  if (unauthorized) {
+    throw new apiError(403, "Unauthorized access to round submissions");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, submissions, "Round submissions fetched")
+  );
+});
+
+
 export {
   create,
   getAll,
@@ -585,5 +657,8 @@ export {
   addRounds,
   updateRound,
   deleteRound,
-  allJudges
+  allJudges,
+  getJudgeSubmissions,
+  getJudgeRoundSubmissions,
+  getJudgeHackathonSubmissions
 };
