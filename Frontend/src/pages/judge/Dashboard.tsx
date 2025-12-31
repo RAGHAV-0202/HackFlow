@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import StatCard from '@/components/common/StatCard';
 import EmptyState from '@/components/common/EmptyState';
-import { hackathonApi, evaluationApi } from '@/lib/api';
+import { evaluationApi } from '@/lib/api';
 import { Hackathon, Submission } from '@/types';
 import { ClipboardCheck, Clock, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -19,13 +19,21 @@ const JudgeDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [hackathonsRes, submissionsRes]: any = await Promise.all([
-          hackathonApi.getJudgeHackathons(),
-          evaluationApi.getJudgeSubmissions()
-        ]);
+        // Get submissions which include populated hackathon data
+        const response: any = await evaluationApi.getJudgeSubmissions();
+        // Axios interceptor returns response.data, so response is { statusCode, data: [...], message, success }
+        const submissionsData = response?.data || [];
         
-        setHackathons(hackathonsRes.data || []);
-        setSubmissions(submissionsRes.data || []);
+        // Extract unique hackathons from submissions
+        const hackathonMap = new Map<string, Hackathon>();
+        submissionsData.forEach((sub: any) => {
+          if (sub.hackathon && sub.hackathon._id) {
+            hackathonMap.set(sub.hackathon._id, sub.hackathon);
+          }
+        });
+        
+        setHackathons(Array.from(hackathonMap.values()));
+        setSubmissions(submissionsData);
       } catch (error) {
         console.error('Failed to fetch judge data:', error);
       } finally {

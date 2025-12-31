@@ -75,8 +75,6 @@ export const hackathonApi = {
   
   getById: (id: string) => api.get(`/hackathon/${id}`),
   
-  getJudgeHackathons: () => api.get('/hackathon/judge/assigned'),
-  
   getOrganizerHackathons: () => api.get('/hackathon/organizer'),
   
   update: (id: string, data: Partial<import('../types').Hackathon>) =>

@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import EmptyState from '@/components/common/EmptyState';
-import { hackathonApi } from '@/lib/api';
+import { evaluationApi } from '@/lib/api';
 import { Hackathon } from '@/types';
 import { Trophy, Calendar, Users, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -17,10 +17,20 @@ const AssignedHackathons = () => {
   useEffect(() => {
     const fetchHackathons = async () => {
       try {
-        const response = await hackathonApi.getJudgeHackathons();
-        if (response.data?.success) {
-          setHackathons(response.data.data || []);
-        }
+        // Get submissions which include populated hackathon data
+        const response: any = await evaluationApi.getJudgeSubmissions();
+        // Axios interceptor returns response.data, so response is { statusCode, data: [...], message, success }
+        const submissions = response?.data || [];
+        
+        // Extract unique hackathons from submissions
+        const hackathonMap = new Map<string, Hackathon>();
+        submissions.forEach((sub: any) => {
+          if (sub.hackathon && sub.hackathon._id) {
+            hackathonMap.set(sub.hackathon._id, sub.hackathon);
+          }
+        });
+        
+        setHackathons(Array.from(hackathonMap.values()));
       } catch (error) {
         console.error('Failed to fetch hackathons:', error);
       } finally {

@@ -20,17 +20,18 @@ const MyTeams = () => {
       try {
         // Fetch all hackathons to get teams
         const hackathonRes: any = await hackathonApi.getAll();
-        const hackathons = hackathonRes?.data || hackathonRes || [];
+        // API returns { data: { data: [...] } } with axios wrapper
+        const hackathons = hackathonRes?.data?.data || hackathonRes?.data || [];
         const allTeams: Team[] = [];
         
         for (const hackathon of hackathons) {
-          if (hackathon.teams) {
+          if (hackathon.teams && Array.isArray(hackathon.teams)) {
             for (const team of hackathon.teams) {
               // Check if user is a member or leader
-              const memberId = (m: any) => typeof m === 'string' ? m : m?._id;
+              const getMemberId = (m: any) => typeof m === 'string' ? m : m?._id;
               const leaderId = typeof team.leader === 'string' ? team.leader : team.leader?._id;
               
-              const isMember = team.members?.some((m: any) => memberId(m) === user?._id);
+              const isMember = team.members?.some((m: any) => getMemberId(m) === user?._id);
               const isLeader = leaderId === user?._id;
               
               if (isMember || isLeader) {

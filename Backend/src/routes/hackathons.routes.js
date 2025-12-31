@@ -22,6 +22,7 @@ router.route("/join/:id").post(VerifyJWT , allowRoles("participant") , joinHacka
 router.route("/get-judges").post(VerifyJWT , allowRoles("admin" , "organizer") , allJudges)
 router.route("/assign-judge/:id").post(VerifyJWT , allowRoles("admin" , "organizer") , assignJudge)
 router.route("/remove-judge/:id").post(VerifyJWT , allowRoles("admin" , "organizer") , removeJudge)
+
 router.route("/judge/submissions").get(VerifyJWT, allowRoles("judge"), getJudgeSubmissions);
 router.route("/judge/hackathon/:hackathonId/submissions").get(VerifyJWT, allowRoles("judge"), getJudgeHackathonSubmissions);
 router.route("/judge/round/:roundId/submissions").get(VerifyJWT, allowRoles("judge"), getJudgeRoundSubmissions);

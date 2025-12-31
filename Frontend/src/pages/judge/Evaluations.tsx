@@ -18,10 +18,10 @@ const Evaluations = () => {
   useEffect(() => {
     const fetchSubmissions = async () => {
       try {
-        const response = await evaluationApi.getJudgeSubmissions();
-        if (response.data?.success) {
-          setSubmissions(response.data.data || []);
-        }
+        const response: any = await evaluationApi.getJudgeSubmissions();
+        // Axios interceptor returns response.data, so response is { statusCode, data: [...], message, success }
+        const submissionsData = response?.data || [];
+        setSubmissions(submissionsData);
       } catch (error) {
         console.error('Failed to fetch submissions:', error);
       } finally {

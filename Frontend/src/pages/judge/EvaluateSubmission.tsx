@@ -26,7 +26,9 @@ const EvaluateSubmissionEnhanced = () => {
   const fetchSubmission = async () => {
     try {
       const response: any = await submissionApi.getById(id!);
-      setSubmission(response.data);
+      // API returns { data: { data: {...} } } with axios wrapper
+      const submissionData = response.data?.data || response.data;
+      setSubmission(submissionData);
     } catch (error) {
       console.error('Failed to fetch submission:', error);
     } finally {
