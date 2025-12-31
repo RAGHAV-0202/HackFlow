@@ -15,12 +15,19 @@ import {
   Globe,
   Image,
   File,
+  CalendarIcon,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -47,8 +54,6 @@ const roundSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   description: z.string().optional(),
   submissionType: z.enum(['ppt', 'video', 'github', 'live_demo', 'screenshot', 'document', 'multiple']),
-  startDate: z.string().min(1, 'Start date is required'),
-  endDate: z.string().min(1, 'End date is required'),
   maxMarks: z.number().min(1, 'Max marks must be at least 1'),
 });
 
@@ -60,6 +65,8 @@ const AddRound = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [hackathon, setHackathon] = useState<Hackathon | null>(null);
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
   const [criteria, setCriteria] = useState<CriteriaItem[]>([
     { id: '1', name: 'Innovation', description: 'How creative and novel is the solution?', maxScore: 10, weight: 25 },
     { id: '2', name: 'Technical Implementation', description: 'Quality of code and architecture', maxScore: 10, weight: 25 },
@@ -99,6 +106,15 @@ const AddRound = () => {
   };
 
   const onSubmit = async (data: RoundFormData) => {
+    if (!startDate || !endDate) {
+      toast({
+        title: 'Error',
+        description: 'Please select both start and end dates.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (criteria.length === 0) {
       toast({
         title: 'Error',
@@ -123,7 +139,12 @@ const AddRound = () => {
       const roundNumber = (hackathon?.rounds?.length || 0) + 1;
       
       const roundData = {
-        ...data,
+        name: data.name,
+        description: data.description,
+        submissionType: data.submissionType,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        maxMarks: data.maxMarks,
         roundNumber,
         criteria: criteria.map((c, index) => ({
           name: c.name,
@@ -239,27 +260,57 @@ const AddRound = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date *</Label>
-              <Input
-                id="startDate"
-                type="datetime-local"
-                {...register('startDate')}
-              />
-              {errors.startDate && (
-                <p className="text-sm text-destructive">{errors.startDate.message}</p>
-              )}
+              <Label>Start Date *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endDate">End Date *</Label>
-              <Input
-                id="endDate"
-                type="datetime-local"
-                {...register('endDate')}
-              />
-              {errors.endDate && (
-                <p className="text-sm text-destructive">{errors.endDate.message}</p>
-              )}
+              <Label>End Date *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-2">

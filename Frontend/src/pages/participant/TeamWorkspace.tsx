@@ -91,7 +91,12 @@ const TeamWorkspace = () => {
     return hackathon.rounds.find((round) => {
       const start = new Date(round.startDate);
       const end = new Date(round.endDate);
-      return now >= start && now <= end;
+      // Set end time to end of day if only date was provided
+      const endOfDay = new Date(end);
+      if (end.getHours() === 0 && end.getMinutes() === 0 && end.getSeconds() === 0) {
+        endOfDay.setHours(23, 59, 59, 999);
+      }
+      return now >= start && now <= endOfDay;
     }) || null;
   };
 
@@ -266,11 +271,16 @@ const TeamWorkspace = () => {
           >
             {hackathon?.rounds && hackathon.rounds.length > 0 ? (
               hackathon.rounds.map((round) => {
-                const now = new Date();
+              const now = new Date();
                 const start = new Date(round.startDate);
                 const end = new Date(round.endDate);
-                const isActive = now >= start && now <= end;
-                const isPast = now > end;
+                // Set end time to end of day if only date was provided
+                const endOfDay = new Date(end);
+                if (end.getHours() === 0 && end.getMinutes() === 0 && end.getSeconds() === 0) {
+                  endOfDay.setHours(23, 59, 59, 999);
+                }
+                const isActive = now >= start && now <= endOfDay;
+                const isPast = now > endOfDay;
                 const hasSubmission = submissions.some(
                   (s) => (typeof s.round === 'string' ? s.round : s.round._id) === round._id
                 );

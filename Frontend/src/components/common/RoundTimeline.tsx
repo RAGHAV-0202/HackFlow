@@ -27,11 +27,8 @@ const RoundTimeline = ({ rounds, onRoundClick, showCriteria = false }: RoundTime
     const start = new Date(round.startDate);
     const end = new Date(round.endDate);
 
-    // Check if end date has fully passed (end of day)
     if (now > end) return 'completed';
-    // Check if start date hasn't arrived yet
     if (now < start) return 'upcoming';
-    // Otherwise, we're in the active period
     return 'active';
   };
 
