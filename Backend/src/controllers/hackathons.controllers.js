@@ -645,6 +645,25 @@ const getJudgeRoundSubmissions = asyncHandler(async (req, res) => {
   );
 });
 
+const judgeInHackathons = asyncHandler(async (req, res) => {
+  const judge = req.user;
+
+  if (judge.role !== "judge") {
+    throw new apiError(403, "Only judges can access this");
+  }
+
+  const hackathons = await Hackathon.find({
+    judges: { $in: [judge._id] }
+  })
+    .populate("organizer", "name email")
+    .populate("rounds", "name roundNumber")
+    .sort({ createdAt: -1 });
+
+  return res.status(200).json(
+    new ApiResponse(200, hackathons, "Judge hackathons fetched")
+  );
+});
+
 
 export {
   create,
@@ -661,5 +680,6 @@ export {
   allJudges,
   getJudgeSubmissions,
   getJudgeRoundSubmissions,
-  getJudgeHackathonSubmissions
+  getJudgeHackathonSubmissions,
+  judgeInHackathons
 };

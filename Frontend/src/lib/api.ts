@@ -170,14 +170,14 @@ export const evaluationApi = {
   
   getPendingEvaluations: () => api.get('/evaluations/judge/pending'),
   
-  // Judge submission routes (from hackathon router)
-  getJudgeSubmissions: () => api.get('/hackathon/judge/submissions'),
+  // Judge submission routes
+  getJudgeSubmissions: () => api.get('/judge/submissions'),
   
   getJudgeHackathonSubmissions: (hackathonId: string) => 
-    api.get(`/hackathon/judge/hackathon/${hackathonId}/submissions`),
+    api.get(`/judge/hackathon/${hackathonId}/submissions`),
   
   getJudgeRoundSubmissions: (roundId: string) => 
-    api.get(`/hackathon/judge/round/${roundId}/submissions`),
+    api.get(`/judge/round/${roundId}/submissions`),
   
   getById: (id: string) => api.get(`/evaluations/${id}`),
   
