@@ -1,7 +1,6 @@
 import express from "express"
 import {create , getAll , getParticular , updateHackathon , deleteHackathon , joinHackathon , assignJudge , removeJudge , addRounds , updateRound , deleteRound , allJudges ,   getJudgeSubmissions, getJudgeRoundSubmissions, getJudgeHackathonSubmissions , judgeInHackathons} from "../controllers/hackathons.controllers.js"
 const router = express.Router();
-import { VerifyJWT } from "../middlewares/auth.middleware.js";
 import { isJudge , isAdmin , isOrganizer , allowRoles } from "../middlewares/role.middleware.js";
 import { verifyJWT } from "../../../../Backend/video/src/middlewares/auth.middleware.js";
 
@@ -28,6 +27,6 @@ router.route("/judge/submissions").get(VerifyJWT, allowRoles("judge"), getJudgeS
 router.route("/judge/:hackathonId/submissions").get(VerifyJWT, allowRoles("judge"), getJudgeHackathonSubmissions);
 router.route("/judge/round/:roundId/submissions").get(VerifyJWT, allowRoles("judge"), getJudgeRoundSubmissions);
 
-router.route("/judge/hackathons").get(verifyJWT , allowRoles("organizer" , "admin") , judgeInHackathons)
+router.route("/judge/hackathons").get(VerifyJWT , allowRoles("organizer" , "admin") , judgeInHackathons)
 
 export default router ;
