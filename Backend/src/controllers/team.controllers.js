@@ -34,7 +34,7 @@ export const createTeam = asyncHandler(async (req, res) => {
     name,
     hackathon: hackathonId,
     leader: userId,
-    members: [],
+    members: [userId],
     projectName,
     projectDescription,
     technologies
