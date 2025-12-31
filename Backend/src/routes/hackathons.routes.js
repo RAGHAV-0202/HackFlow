@@ -1,8 +1,8 @@
 import express from "express"
 import {create , getAll , getParticular , updateHackathon , deleteHackathon , joinHackathon , assignJudge , removeJudge , addRounds , updateRound , deleteRound , allJudges ,   getJudgeSubmissions, getJudgeRoundSubmissions, getJudgeHackathonSubmissions , judgeInHackathons} from "../controllers/hackathons.controllers.js"
 const router = express.Router();
+import { VerifyJWT } from "../middlewares/auth.middleware.js";
 import { isJudge , isAdmin , isOrganizer , allowRoles } from "../middlewares/role.middleware.js";
-import { verifyJWT } from "../../../../Backend/video/src/middlewares/auth.middleware.js";
 
 
 
