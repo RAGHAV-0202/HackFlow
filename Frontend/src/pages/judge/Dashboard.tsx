@@ -19,21 +19,14 @@ const JudgeDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Get submissions which include populated hackathon data
-        const response: any = await evaluationApi.getJudgeSubmissions();
-        // Axios interceptor returns response.data, so response is { statusCode, data: [...], message, success }
-        const submissionsData = response?.data || [];
+        // Fetch hackathons and submissions in parallel
+        const [hackathonsResponse, submissionsResponse]: any = await Promise.all([
+          evaluationApi.getJudgeHackathons(),
+          evaluationApi.getJudgeSubmissions()
+        ]);
         
-        // Extract unique hackathons from submissions
-        const hackathonMap = new Map<string, Hackathon>();
-        submissionsData.forEach((sub: any) => {
-          if (sub.hackathon && sub.hackathon._id) {
-            hackathonMap.set(sub.hackathon._id, sub.hackathon);
-          }
-        });
-        
-        setHackathons(Array.from(hackathonMap.values()));
-        setSubmissions(submissionsData);
+        setHackathons(hackathonsResponse?.data || []);
+        setSubmissions(submissionsResponse?.data || []);
       } catch (error) {
         console.error('Failed to fetch judge data:', error);
       } finally {

@@ -17,20 +17,8 @@ const AssignedHackathons = () => {
   useEffect(() => {
     const fetchHackathons = async () => {
       try {
-        // Get submissions which include populated hackathon data
-        const response: any = await evaluationApi.getJudgeSubmissions();
-        // Axios interceptor returns response.data, so response is { statusCode, data: [...], message, success }
-        const submissions = response?.data || [];
-        
-        // Extract unique hackathons from submissions
-        const hackathonMap = new Map<string, Hackathon>();
-        submissions.forEach((sub: any) => {
-          if (sub.hackathon && sub.hackathon._id) {
-            hackathonMap.set(sub.hackathon._id, sub.hackathon);
-          }
-        });
-        
-        setHackathons(Array.from(hackathonMap.values()));
+        const response: any = await evaluationApi.getJudgeHackathons();
+        setHackathons(response?.data || []);
       } catch (error) {
         console.error('Failed to fetch hackathons:', error);
       } finally {
