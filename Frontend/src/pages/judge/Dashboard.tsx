@@ -13,23 +13,19 @@ import { format } from 'date-fns';
 
 const JudgeDashboard = () => {
   const [hackathons, setHackathons] = useState<Hackathon[]>([]);
-  const [pendingEvaluations, setPendingEvaluations] = useState<Submission[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [hackathonsRes, evaluationsRes] = await Promise.all([
+        const [hackathonsRes, submissionsRes]: any = await Promise.all([
           hackathonApi.getJudgeHackathons(),
-          evaluationApi.getPendingEvaluations()
+          evaluationApi.getJudgeSubmissions()
         ]);
         
-        if (hackathonsRes.data?.success) {
-          setHackathons(hackathonsRes.data.data || []);
-        }
-        if (evaluationsRes.data?.success) {
-          setPendingEvaluations(evaluationsRes.data.data || []);
-        }
+        setHackathons(hackathonsRes.data || []);
+        setSubmissions(submissionsRes.data || []);
       } catch (error) {
         console.error('Failed to fetch judge data:', error);
       } finally {
@@ -40,6 +36,10 @@ const JudgeDashboard = () => {
     fetchData();
   }, []);
 
+  const pendingSubmissions = submissions.filter(s => s.evaluationStatus === 'pending');
+  const inProgressSubmissions = submissions.filter(s => s.evaluationStatus === 'in_progress');
+  const completedSubmissions = submissions.filter(s => s.evaluationStatus === 'completed');
+
   const stats = [
     {
       title: 'Assigned Hackathons',
@@ -49,13 +49,13 @@ const JudgeDashboard = () => {
     },
     {
       title: 'Pending Evaluations',
-      value: pendingEvaluations.length,
+      value: pendingSubmissions.length + inProgressSubmissions.length,
       icon: Clock,
       description: 'Submissions awaiting review'
     },
     {
       title: 'Completed',
-      value: pendingEvaluations.filter(s => s.evaluationStatus === 'completed').length,
+      value: completedSubmissions.length,
       icon: CheckCircle,
       description: 'Evaluations completed'
     }
@@ -98,7 +98,7 @@ const JudgeDashboard = () => {
             </Link>
           </CardHeader>
           <CardContent>
-            {pendingEvaluations.length === 0 ? (
+            {pendingSubmissions.length === 0 && inProgressSubmissions.length === 0 ? (
               <EmptyState
                 icon={CheckCircle}
                 title="All caught up!"
@@ -106,20 +106,27 @@ const JudgeDashboard = () => {
               />
             ) : (
               <div className="space-y-4">
-                {pendingEvaluations.slice(0, 5).map((submission) => (
+                {[...pendingSubmissions, ...inProgressSubmissions].slice(0, 5).map((submission) => (
                   <div
                     key={submission._id}
                     className="flex items-center justify-between p-4 border rounded-lg"
                   >
-                    <div>
-                      <p className="font-medium">{submission.title}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{submission.title}</p>
                       <p className="text-sm text-muted-foreground">
                         {submission.team?.name} • Round {submission.round?.roundNumber}
                       </p>
                     </div>
-                    <Link to={`/judge/evaluate/${submission._id}`}>
-                      <Button size="sm">Evaluate</Button>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={submission.evaluationStatus === 'in_progress' ? 'default' : 'secondary'}>
+                        {submission.evaluationStatus === 'in_progress' ? 'In Progress' : 'Pending'}
+                      </Badge>
+                      <Link to={`/judge/evaluate/${submission._id}`}>
+                        <Button size="sm">
+                          {submission.evaluationStatus === 'in_progress' ? 'Continue' : 'Evaluate'}
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>
