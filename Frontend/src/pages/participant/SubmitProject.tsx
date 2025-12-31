@@ -134,7 +134,7 @@ const SubmitProject = () => {
     try {
       const submissionData: any = {
         ...data,
-        team: teamId,
+        teamId,
         submissionType: round.submissionType,
         technologies,
         additionalLinks: additionalLinks.filter((l) => l.title && l.url),
