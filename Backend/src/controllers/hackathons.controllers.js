@@ -452,10 +452,10 @@ const deleteHackathon = asyncHandler(async (req, res) => {
 
 
 const assignJudge = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const { id: hackathonId } = req.params;
   const { judgeId } = req.body;
 
-  if (!id) {
+  if (!hackathonId) {
     throw new apiError(400, "Hackathon ID is required");
   }
 
@@ -463,18 +463,17 @@ const assignJudge = asyncHandler(async (req, res) => {
     throw new apiError(400, "Judge ID is required");
   }
 
-  const hackathon = await Hackathon.findById(id).populate("organizer");
+  const hackathon = await Hackathon.findById(hackathonId).populate("organizer");
 
   if (!hackathon) {
     throw new apiError(404, "Hackathon not found");
   }
 
-  // Check if requester is the organizer
+  // Organizer check
   if (req.user._id.toString() !== hackathon.organizer._id.toString()) {
     throw new apiError(403, "Only the organizer can assign judges");
   }
 
-  // Check if judge exists and has judge role
   const judge = await User.findById(judgeId);
 
   if (!judge) {
@@ -482,19 +481,24 @@ const assignJudge = asyncHandler(async (req, res) => {
   }
 
   if (judge.role !== "judge") {
-    throw new apiError(400, "User must have 'judge' role to be assigned as a judge");
+    throw new apiError(400, "User must have 'judge' role");
   }
 
-  // Check if judge is already assigned
+  // Prevent duplicate assignment (hackathon side)
   if (hackathon.judges.some(j => j.toString() === judgeId.toString())) {
     throw new apiError(400, "Judge is already assigned to this hackathon");
   }
 
-  // Add judge to hackathon
-  hackathon.judges.push(judgeId);
-  await hackathon.save();
+  // ✅ Add on BOTH sides (use addToSet to avoid duplicates)
+  hackathon.judges.addToSet(judgeId);
+  judge.hackathonsJoined.addToSet(hackathonId);
 
-  const updatedHackathon = await Hackathon.findById(id)
+  await Promise.all([
+    hackathon.save(),
+    judge.save()
+  ]);
+
+  const updatedHackathon = await Hackathon.findById(hackathonId)
     .populate("organizer", "name email")
     .populate("judges", "name email");
 
@@ -502,6 +506,7 @@ const assignJudge = asyncHandler(async (req, res) => {
     new ApiResponse(200, updatedHackathon, "Judge assigned successfully")
   );
 });
+
 
 const removeJudge = asyncHandler(async (req, res) => {
   const { id } = req.params;
