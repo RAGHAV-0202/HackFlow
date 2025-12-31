@@ -6,6 +6,7 @@ import Hackathon from "../models/Hackathon.model.js";
 import Round from "../models/Round.model.js";
 import Criteria from "../models/Criteria.Schema.js";
 import mongoose from "mongoose";
+import Submission from "../models/Submission.model.js";
 
 const create = asyncHandler(async (req, res) => {
   const {
