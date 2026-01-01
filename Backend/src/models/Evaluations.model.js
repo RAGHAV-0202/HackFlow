@@ -93,27 +93,27 @@ EvaluationSchema.index({ judge: 1 });
 EvaluationSchema.index({ submission: 1 });
 
 // Pre-save hook to calculate total and weighted scores
-EvaluationSchema.pre("save", function(next) {
+EvaluationSchema.pre("save", async function () {
   if (this.scores && this.scores.length > 0) {
-    // Calculate total score (sum of all scores)
+    // Calculate total score
     this.totalScore = this.scores.reduce((sum, scoreItem) => {
       return sum + scoreItem.score;
     }, 0);
 
     // Calculate weighted score
     this.weightedScore = this.scores.reduce((sum, scoreItem) => {
-      const weightedValue = (scoreItem.score / scoreItem.maxScore) * scoreItem.weight;
+      const weightedValue =
+        (scoreItem.score / scoreItem.maxScore) * scoreItem.weight;
       return sum + weightedValue;
     }, 0);
 
-    // Check if evaluation is complete (all criteria scored)
-    this.isComplete = this.scores.every(scoreItem => 
-      scoreItem.score !== undefined && scoreItem.score !== null
+    // Mark evaluation as complete if all scores exist
+    this.isComplete = this.scores.every(
+      scoreItem => scoreItem.score !== undefined && scoreItem.score !== null
     );
   }
-  
-  next();
 });
+
 
 // Method to add or update score for a criterion
 EvaluationSchema.methods.addScore = async function(criteriaId, score, maxScore, weight, comments = "") {

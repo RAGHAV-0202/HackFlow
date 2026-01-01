@@ -37,6 +37,8 @@ export const evaluateSubmission = asyncHandler(async (req, res) => {
   // Verify judge is assigned to hackathon
   const hackathon = await Hackathon.findById(submission.hackathon._id);
 
+  console.log("line 40 ")
+
   if (
     !hackathon.judges.some(
       j => j.toString() === req.user._id.toString()
@@ -47,6 +49,8 @@ export const evaluateSubmission = asyncHandler(async (req, res) => {
 
   // Fetch criteria for the round
   const criteria = await Criteria.find({ round: submission.round._id });
+
+  console.log("line 53")
 
   if (!criteria || criteria.length === 0) {
     throw new apiError(400, "No evaluation criteria defined for this round");
@@ -102,6 +106,8 @@ export const evaluateSubmission = asyncHandler(async (req, res) => {
     });
   }
 
+  console.log("109")
+
   // Create or update evaluation
   let evaluation = await Evaluation.findOne({
     submission: submissionId,
@@ -110,6 +116,7 @@ export const evaluateSubmission = asyncHandler(async (req, res) => {
 
   let isCreated = false;
 
+  console.log("119")
   if (evaluation) {
     // Update existing evaluation
     evaluation.scores = validatedScores;
@@ -134,12 +141,15 @@ export const evaluateSubmission = asyncHandler(async (req, res) => {
       evaluatedAt: new Date()
     });
 
+    console.log("144")
     isCreated = true;
 
     submission.evaluations.push(evaluation._id);
     submission.evaluationStatus = "in_progress";
     await submission.save();
   }
+
+  console.log("150")
 
   // Check if all judges have completed evaluation
   const totalJudges = hackathon.judges.length;
@@ -153,6 +163,8 @@ export const evaluateSubmission = asyncHandler(async (req, res) => {
     // This method calculates average + sets evaluationStatus
     await submission.calculateAverageScore();
   }
+
+  console.log("163")
 
   // Populate response
   await evaluation.populate([
