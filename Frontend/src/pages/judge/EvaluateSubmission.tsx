@@ -148,8 +148,8 @@ const EvaluateSubmissionEnhanced = () => {
   const initialStrengths = existingEvaluation?.strengths || existingEvaluation?.data?.strengths || [];
   const initialImprovements = existingEvaluation?.improvements || existingEvaluation?.data?.improvements || [];
   
-  console.log('Existing evaluation:', existingEvaluation);
-  console.log('Initial scores:', initialScores);
+  // Check if evaluation is already submitted (read-only mode)
+  const isReadOnly = existingEvaluation?.status === 'submitted';
 
   return (
     <div className="space-y-6">
@@ -164,10 +164,11 @@ const EvaluateSubmissionEnhanced = () => {
         </Button>
 
         <h1 className="text-2xl font-heading font-bold text-foreground">
-          {existingEvaluation ? 'Edit Evaluation' : 'Evaluate Submission'}
+          {isReadOnly ? 'View Evaluation' : existingEvaluation ? 'Edit Evaluation' : 'Evaluate Submission'}
         </h1>
         <p className="text-muted-foreground">
           {submission.team?.name} - {round?.name || 'Unknown Round'}
+          {isReadOnly && <span className="ml-2 text-success">(Submitted)</span>}
         </p>
       </motion.div>
 
@@ -197,8 +198,9 @@ const EvaluateSubmissionEnhanced = () => {
               initialFeedback={initialFeedback}
               initialStrengths={initialStrengths}
               initialImprovements={initialImprovements}
-              onSave={handleSave}
+              onSave={isReadOnly ? undefined : handleSave}
               isSubmitting={submitting}
+              readOnly={isReadOnly}
             />
           ) : (
             <div className="text-center py-12">

@@ -16,7 +16,7 @@ interface ScorecardProps {
   initialFeedback?: string;
   initialStrengths?: string[];
   initialImprovements?: string[];
-  onSave: (data: {
+  onSave?: (data: {
     scores: Score[];
     feedback: string;
     strengths: string[];
@@ -24,6 +24,7 @@ interface ScorecardProps {
     status: 'draft' | 'submitted';
   }) => Promise<void>;
   isSubmitting?: boolean;
+  readOnly?: boolean;
 }
 
 const Scorecard = ({
@@ -34,6 +35,7 @@ const Scorecard = ({
   initialImprovements = [],
   onSave,
   isSubmitting = false,
+  readOnly = false,
 }: ScorecardProps) => {
   const buildScoresFromInitial = () => {
     const initial: Record<string, { score: number; comments: string }> = {};
@@ -225,10 +227,11 @@ const Scorecard = ({
             <div className="space-y-2">
               <Slider
                 value={[scores[c._id]?.score || 0]}
-                onValueChange={([value]) => handleScoreChange(c._id, value)}
+                onValueChange={readOnly ? undefined : ([value]) => handleScoreChange(c._id, value)}
                 max={c.maxScore}
                 step={1}
                 className="w-full"
+                disabled={readOnly}
               />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>0</span>
@@ -236,15 +239,23 @@ const Scorecard = ({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-sm">Comments (optional)</Label>
-              <Textarea
-                placeholder="Add specific feedback for this criteria..."
-                value={scores[c._id]?.comments || ''}
-                onChange={(e) => handleCommentChange(c._id, e.target.value)}
-                rows={2}
-              />
-            </div>
+            {(scores[c._id]?.comments || !readOnly) && (
+              <div className="space-y-2">
+                <Label className="text-sm">Comments {!readOnly && '(optional)'}</Label>
+                {readOnly ? (
+                  <p className="text-sm text-muted-foreground bg-muted/50 rounded-md p-3">
+                    {scores[c._id]?.comments || 'No comments provided'}
+                  </p>
+                ) : (
+                  <Textarea
+                    placeholder="Add specific feedback for this criteria..."
+                    value={scores[c._id]?.comments || ''}
+                    onChange={(e) => handleCommentChange(c._id, e.target.value)}
+                    rows={2}
+                  />
+                )}
+              </div>
+            )}
           </motion.div>
         ))}
       </div>
@@ -255,66 +266,102 @@ const Scorecard = ({
         
         <div className="space-y-2">
           <Label>General Feedback</Label>
-          <Textarea
-            placeholder="Provide overall feedback for the submission..."
-            value={feedback}
-            onChange={(e) => setFeedback(e.target.value)}
-            rows={4}
-          />
+          {readOnly ? (
+            <p className="text-sm text-muted-foreground bg-muted/50 rounded-md p-3 whitespace-pre-wrap">
+              {feedback || 'No feedback provided'}
+            </p>
+          ) : (
+            <Textarea
+              placeholder="Provide overall feedback for the submission..."
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              rows={4}
+            />
+          )}
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-success">Strengths</Label>
-            <Textarea
-              placeholder="List strengths (one per line)..."
-              value={strengthsText}
-              onChange={(e) => setStrengthsText(e.target.value)}
-              rows={4}
-              className="border-success/30 focus:ring-success/30"
-            />
+            {readOnly ? (
+              <div className="text-sm bg-success/10 rounded-md p-3 border border-success/30">
+                {strengthsText ? (
+                  <ul className="list-disc list-inside space-y-1">
+                    {strengthsText.split('\n').filter(s => s.trim()).map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-muted-foreground">No strengths listed</p>
+                )}
+              </div>
+            ) : (
+              <Textarea
+                placeholder="List strengths (one per line)..."
+                value={strengthsText}
+                onChange={(e) => setStrengthsText(e.target.value)}
+                rows={4}
+                className="border-success/30 focus:ring-success/30"
+              />
+            )}
           </div>
           <div className="space-y-2">
             <Label className="text-warning">Areas for Improvement</Label>
-            <Textarea
-              placeholder="List improvements (one per line)..."
-              value={improvementsText}
-              onChange={(e) => setImprovementsText(e.target.value)}
-              rows={4}
-              className="border-warning/30 focus:ring-warning/30"
-            />
+            {readOnly ? (
+              <div className="text-sm bg-warning/10 rounded-md p-3 border border-warning/30">
+                {improvementsText ? (
+                  <ul className="list-disc list-inside space-y-1">
+                    {improvementsText.split('\n').filter(s => s.trim()).map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-muted-foreground">No improvements listed</p>
+                )}
+              </div>
+            ) : (
+              <Textarea
+                placeholder="List improvements (one per line)..."
+                value={improvementsText}
+                onChange={(e) => setImprovementsText(e.target.value)}
+                rows={4}
+                className="border-warning/30 focus:ring-warning/30"
+              />
+            )}
           </div>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-3 pt-4 border-t border-border">
-        <Button
-          variant="outline"
-          onClick={() => handleSubmit('draft')}
-          disabled={isSubmitting}
-          className="flex-1"
-        >
-          {isSubmitting ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4 mr-2" />
-          )}
-          Save as Draft
-        </Button>
-        <Button
-          onClick={() => handleSubmit('submitted')}
-          disabled={isSubmitting}
-          className="flex-1"
-        >
-          {isSubmitting ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <Send className="w-4 h-4 mr-2" />
-          )}
-          Submit Evaluation
-        </Button>
-      </div>
+      {/* Actions - only show when not in readOnly mode */}
+      {!readOnly && onSave && (
+        <div className="flex gap-3 pt-4 border-t border-border">
+          <Button
+            variant="outline"
+            onClick={() => handleSubmit('draft')}
+            disabled={isSubmitting}
+            className="flex-1"
+          >
+            {isSubmitting ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4 mr-2" />
+            )}
+            Save as Draft
+          </Button>
+          <Button
+            onClick={() => handleSubmit('submitted')}
+            disabled={isSubmitting}
+            className="flex-1"
+          >
+            {isSubmitting ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4 mr-2" />
+            )}
+            Submit Evaluation
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
