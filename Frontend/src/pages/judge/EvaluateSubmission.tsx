@@ -149,7 +149,8 @@ const EvaluateSubmissionEnhanced = () => {
   const initialImprovements = existingEvaluation?.improvements || existingEvaluation?.data?.improvements || [];
   
   // Check if evaluation is already submitted (read-only mode)
-  const isReadOnly = existingEvaluation?.status === 'submitted';
+  // Check both the evaluation status and submission's evaluationStatus
+  const isReadOnly = existingEvaluation?.status === 'submitted' || submission?.evaluationStatus === 'completed';
 
   return (
     <div className="space-y-6">
