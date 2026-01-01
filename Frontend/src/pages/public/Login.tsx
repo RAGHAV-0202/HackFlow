@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -20,11 +20,31 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const { login, isLoading, error, clearError } = useAuthStore();
+  const { login, isLoading, error, clearError, isAuthenticated, user, checkAuth } = useAuthStore();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get('returnUrl');
   const { toast } = useToast();
+
+  // Auto-login: redirect if already authenticated
+  useEffect(() => {
+    const autoLogin = async () => {
+      await checkAuth();
+      const { isAuthenticated: isAuth, user: currentUser } = useAuthStore.getState();
+      
+      if (isAuth && currentUser) {
+        const roleRoutes: Record<string, string> = {
+          participant: '/dashboard',
+          organizer: '/organizer',
+          judge: '/judge',
+          admin: '/admin',
+        };
+        navigate(returnUrl ? decodeURIComponent(returnUrl) : roleRoutes[currentUser.role] || '/dashboard');
+      }
+    };
+    
+    autoLogin();
+  }, [navigate, returnUrl, checkAuth]);
 
   const {
     register,
