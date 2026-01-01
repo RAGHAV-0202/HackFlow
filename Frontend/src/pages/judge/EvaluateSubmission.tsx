@@ -45,7 +45,11 @@ const EvaluateSubmissionEnhanced = () => {
       setSubmission(submissionData);
 
       // Check for existing evaluation by current judge
-      const evaluations = evaluationsResponse?.data?.evaluations || evaluationsResponse?.evaluations || [];
+      // Handle different response structures
+      const evaluationsData = evaluationsResponse?.data;
+      const evaluations = evaluationsData?.evaluations || evaluationsData?.data?.evaluations || 
+                          (Array.isArray(evaluationsData) ? evaluationsData : []);
+      
       const userStr = localStorage.getItem('user');
       if (userStr && userStr !== 'undefined' && evaluations.length > 0) {
         try {
@@ -54,11 +58,16 @@ const EvaluateSubmissionEnhanced = () => {
             e.judge?._id === user._id || e.judge === user._id
           );
           if (myEvaluation) {
+            console.log('Found existing evaluation:', myEvaluation);
             setExistingEvaluation(myEvaluation);
           }
         } catch (parseError) {
           console.warn('Failed to parse user from localStorage:', parseError);
         }
+      } else if (submissionData?.evaluationStatus === 'completed' && evaluations.length > 0) {
+        // If submission is completed and there are evaluations, use the first one for viewing
+        console.log('Using first evaluation for completed submission:', evaluations[0]);
+        setExistingEvaluation(evaluations[0]);
       }
     } catch (error) {
       console.error('Failed to fetch submission:', error);

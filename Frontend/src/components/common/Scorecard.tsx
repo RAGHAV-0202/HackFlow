@@ -40,13 +40,19 @@ const Scorecard = ({
   const buildScoresFromInitial = () => {
     const initial: Record<string, { score: number; comments: string }> = {};
     criteria.forEach((c) => {
-      // Handle different formats: criteria can be string ID, object with _id, or object with id
-      const existing = initialScores.find((s) => {
+      // Handle different formats: criteria can be string ID, object with _id, or nested in score object
+      const existing = initialScores.find((s: any) => {
+        // s.criteria could be: string ID, object with _id, or the score object might have criteria nested
         const criteriaId = typeof s.criteria === 'string' 
           ? s.criteria 
-          : (s.criteria?._id || (s.criteria as any)?.id);
-        return criteriaId === c._id;
+          : s.criteria?._id || s.criteria?.id;
+        
+        // Also check if the criteria name matches (fallback for different ID formats)
+        const criteriaName = typeof s.criteria === 'object' ? s.criteria?.name : null;
+        
+        return criteriaId === c._id || criteriaId === (c as any).id || criteriaName === c.name;
       });
+      
       initial[c._id] = {
         score: existing?.score ?? 0,
         comments: existing?.comments ?? '',
