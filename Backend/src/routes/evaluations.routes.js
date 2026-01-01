@@ -13,13 +13,11 @@ import {
 
 const router = express.Router();
 
-// Create or update evaluation for a submission (judges only)
-router.post("/evaluate/:submissionId", VerifyJWT, allowRoles("judge"), evaluateSubmission);
+router.post(
+  "/evaluate/:submissionId", VerifyJWT, allowRoles("judge"), evaluateSubmission);
 
-// Get single evaluation by ID
+
 router.get("/:id", VerifyJWT, getEvaluationById);
-
-// Get all evaluations for a submission (organizers, admins, team members can see after published)
 router.get("/submission/:submissionId", VerifyJWT, getEvaluationsBySubmission);
 
 // Get all evaluations by current judge for a round (judges only)

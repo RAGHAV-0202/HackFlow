@@ -8,7 +8,8 @@ import Hackathon from "../models/Hackathon.model.js";
 import Criteria from "../models/Criteria.Schema.js";
 import mongoose from "mongoose";
 
-// Create or update evaluation for a submission
+
+// Create or update evaluation for a submission (Judges only)
 export const evaluateSubmission = asyncHandler(async (req, res) => {
   const { submissionId } = req.params;
   const { scores, feedback, strengths, improvements, status } = req.body;
@@ -21,7 +22,10 @@ export const evaluateSubmission = asyncHandler(async (req, res) => {
     throw new apiError(400, "Scores array is required");
   }
 
-  // Verify submission exists
+  // Normalize status
+  const finalStatus = status || "submitted";
+
+  // Fetch submission
   const submission = await Submission.findById(submissionId)
     .populate("round")
     .populate("hackathon");
@@ -30,41 +34,61 @@ export const evaluateSubmission = asyncHandler(async (req, res) => {
     throw new apiError(404, "Submission not found");
   }
 
-  // Verify user is a judge assigned to this hackathon
+  // Verify judge is assigned to hackathon
   const hackathon = await Hackathon.findById(submission.hackathon._id);
-  
-  if (!hackathon.judges.some(j => j.toString() === req.user._id.toString())) {
+
+  if (
+    !hackathon.judges.some(
+      j => j.toString() === req.user._id.toString()
+    )
+  ) {
     throw new apiError(403, "You are not assigned as a judge for this hackathon");
   }
 
-  // Get criteria for this round
+  // Fetch criteria for the round
   const criteria = await Criteria.find({ round: submission.round._id });
-  
-  if (criteria.length === 0) {
+
+  if (!criteria || criteria.length === 0) {
     throw new apiError(400, "No evaluation criteria defined for this round");
   }
 
-  // Validate scores against criteria
+  // Validate criteria coverage
   const criteriaIds = criteria.map(c => c._id.toString());
   const scoredCriteriaIds = scores.map(s => s.criteria.toString());
 
-  // Check if all criteria are scored
-  const missingCriteria = criteriaIds.filter(id => !scoredCriteriaIds.includes(id));
-  if (missingCriteria.length > 0 && status === "submitted") {
-    throw new apiError(400, "All criteria must be scored before submitting evaluation");
+  const missingCriteria = criteriaIds.filter(
+    id => !scoredCriteriaIds.includes(id)
+  );
+
+  if (missingCriteria.length > 0 && finalStatus === "submitted") {
+    throw new apiError(
+      400,
+      "All criteria must be scored before submitting evaluation"
+    );
   }
 
-  // Validate each score
+  // Validate individual scores
   const validatedScores = [];
+
   for (const scoreItem of scores) {
-    const criterion = criteria.find(c => c._id.toString() === scoreItem.criteria.toString());
-    
+    const criterion = criteria.find(
+      c => c._id.toString() === scoreItem.criteria.toString()
+    );
+
     if (!criterion) {
-      throw new apiError(400, `Invalid criteria ID: ${scoreItem.criteria}`);
+      throw new apiError(
+        400,
+        `Invalid criteria ID: ${scoreItem.criteria}`
+      );
     }
 
-    if (scoreItem.score < 0 || scoreItem.score > criterion.maxScore) {
-      throw new apiError(400, 
+    if (
+      typeof scoreItem.score !== "number" ||
+      scoreItem.score < 0 ||
+      scoreItem.score > criterion.maxScore
+    ) {
+      throw new apiError(
+        400,
         `Score for "${criterion.name}" must be between 0 and ${criterion.maxScore}`
       );
     }
@@ -78,21 +102,23 @@ export const evaluateSubmission = asyncHandler(async (req, res) => {
     });
   }
 
-  // Check if evaluation already exists
+  // Create or update evaluation
   let evaluation = await Evaluation.findOne({
     submission: submissionId,
     judge: req.user._id
   });
 
+  let isCreated = false;
+
   if (evaluation) {
     // Update existing evaluation
     evaluation.scores = validatedScores;
-    evaluation.feedback = feedback || evaluation.feedback;
-    evaluation.strengths = strengths || evaluation.strengths;
-    evaluation.improvements = improvements || evaluation.improvements;
-    evaluation.status = status || evaluation.status;
+    evaluation.feedback = feedback ?? evaluation.feedback;
+    evaluation.strengths = strengths ?? evaluation.strengths;
+    evaluation.improvements = improvements ?? evaluation.improvements;
+    evaluation.status = finalStatus;
     evaluation.evaluatedAt = new Date();
-    
+
     await evaluation.save();
   } else {
     // Create new evaluation
@@ -104,42 +130,51 @@ export const evaluateSubmission = asyncHandler(async (req, res) => {
       feedback: feedback || "",
       strengths: strengths || [],
       improvements: improvements || [],
-      status: status || "submitted",
+      status: finalStatus,
       evaluatedAt: new Date()
     });
 
-    // Add evaluation to submission
+    isCreated = true;
+
     submission.evaluations.push(evaluation._id);
     submission.evaluationStatus = "in_progress";
     await submission.save();
   }
 
-  // Check if all judges have evaluated
+  // Check if all judges have completed evaluation
   const totalJudges = hackathon.judges.length;
+
   const completedEvaluations = await Evaluation.countDocuments({
     submission: submissionId,
     status: "submitted"
   });
 
   if (completedEvaluations === totalJudges) {
-    submission.evaluationStatus = "completed";
+    // This method calculates average + sets evaluationStatus
     await submission.calculateAverageScore();
   }
 
+  // Populate response
   await evaluation.populate([
     { path: "judge", select: "name email" },
     { path: "submission", select: "title team" },
     { path: "scores.criteria", select: "name description weight maxScore" }
   ]);
 
-  return res.status(evaluation.isNew ? 201 : 200).json(
+  return res.status(isCreated ? 201 : 200).json(
     new ApiResponse(
-      evaluation.isNew ? 201 : 200,
+      isCreated ? 201 : 200,
       evaluation,
-      evaluation.isNew ? "Evaluation created successfully" : "Evaluation updated successfully"
+      isCreated
+        ? "Evaluation created successfully"
+        : "Evaluation updated successfully"
     )
   );
 });
+
+
+
+
 
 // Get evaluation by ID
 export const getEvaluationById = asyncHandler(async (req, res) => {

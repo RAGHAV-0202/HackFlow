@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
-const API_BASE_URL = 'https://hackflow-production.up.railway.app/api';
+// const API_BASE_URL = 'https://hackflow-production.up.railway.app/api';
+const API_BASE_URL = "http://localhost:4000/api"
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -171,15 +172,19 @@ export const evaluationApi = {
   getPendingEvaluations: () => api.get('/evaluations/judge/pending'),
   
   // Judge submission routes
-  getJudgeSubmissions: () => api.get('hackathon/judge/submissions'), // correct : no changes needed
+  getJudgeSubmissions: () => api.get('hackathon/judge/submissions'),
   
   getJudgeHackathonSubmissions: (hackathonId: string) => 
-    api.get(`hackathon/judge/${hackathonId}/submissions`), // correct : no changes needed
+    api.get(`hackathon/judge/${hackathonId}/submissions`),
   
   getJudgeRoundSubmissions: (roundId: string) => 
-    api.get(`hackathon/judge/round/${roundId}/submissions`),  // correct : no changes needed
+    api.get(`hackathon/judge/round/${roundId}/submissions`),
   
-  getJudgeHackathons: () => api.get('hackathon/judge/hackathons'),  // correct : no changes needed
+  getJudgeHackathons: () => api.get('hackathon/judge/hackathons'),
+  
+  // Get single submission for judge evaluation
+  getJudgeSubmissionById: (submissionId: string) => 
+    api.get(`hackathon/judge/submissions/${submissionId}`),
   
   getById: (id: string) => api.get(`/evaluations/${id}`),
   

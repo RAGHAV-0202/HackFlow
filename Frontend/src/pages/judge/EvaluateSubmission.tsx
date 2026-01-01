@@ -5,7 +5,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SubmissionViewer from '@/components/common/SubmissionViewer';
 import Scorecard from '@/components/common/Scorecard';
-import { submissionApi, evaluationApi } from '@/lib/api';
+import { evaluationApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Submission, Criteria, Round, Score } from '@/types';
 
@@ -34,14 +34,14 @@ const EvaluateSubmissionEnhanced = () => {
 
   const fetchSubmissionData = async () => {
     try {
-      // Fetch submission and check for existing evaluation in parallel
+      // Fetch submission using judge endpoint and check for existing evaluation in parallel
       const [submissionResponse, evaluationsResponse]: any = await Promise.all([
-        submissionApi.getById(id!),
+        evaluationApi.getJudgeSubmissionById(id!),
         evaluationApi.getBySubmission(id!).catch(() => ({ data: { evaluations: [] } }))
       ]);
 
-      // API returns { data: { data: {...} } } with axios wrapper
-      const submissionData = submissionResponse.data?.data || submissionResponse.data || submissionResponse;
+      // API returns { data: {...} } structure
+      const submissionData = submissionResponse?.data || submissionResponse;
       setSubmission(submissionData);
 
       // Check for existing evaluation by current judge
