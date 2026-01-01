@@ -47,13 +47,17 @@ const EvaluateSubmissionEnhanced = () => {
       // Check for existing evaluation by current judge
       const evaluations = evaluationsResponse?.data?.evaluations || evaluationsResponse?.evaluations || [];
       const userStr = localStorage.getItem('user');
-      if (userStr && evaluations.length > 0) {
-        const user = JSON.parse(userStr);
-        const myEvaluation = evaluations.find((e: any) => 
-          e.judge?._id === user._id || e.judge === user._id
-        );
-        if (myEvaluation) {
-          setExistingEvaluation(myEvaluation);
+      if (userStr && userStr !== 'undefined' && evaluations.length > 0) {
+        try {
+          const user = JSON.parse(userStr);
+          const myEvaluation = evaluations.find((e: any) => 
+            e.judge?._id === user._id || e.judge === user._id
+          );
+          if (myEvaluation) {
+            setExistingEvaluation(myEvaluation);
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse user from localStorage:', parseError);
         }
       }
     } catch (error) {
