@@ -1,5 +1,5 @@
 import express from "express"
-import {create , getAll , getParticular , updateHackathon , deleteHackathon , joinHackathon , assignJudge , removeJudge , addRounds , updateRound , deleteRound , allJudges ,   getJudgeSubmissions, getJudgeRoundSubmissions, getJudgeHackathonSubmissions , judgeInHackathons} from "../controllers/hackathons.controllers.js"
+import {create , getAll , getParticular , updateHackathon , deleteHackathon , joinHackathon , assignJudge , removeJudge , addRounds , updateRound , deleteRound , allJudges ,   getJudgeSubmissions, getJudgeRoundSubmissions, getJudgeHackathonSubmissions , judgeInHackathons , getJudgeSingleSubmission} from "../controllers/hackathons.controllers.js"
 const router = express.Router();
 import { VerifyJWT } from "../middlewares/auth.middleware.js";
 import { isJudge , isAdmin , isOrganizer , allowRoles } from "../middlewares/role.middleware.js";
@@ -24,6 +24,7 @@ router.route("/assign-judge/:id").post(VerifyJWT , allowRoles("admin" , "organiz
 router.route("/remove-judge/:id").post(VerifyJWT , allowRoles("admin" , "organizer") , removeJudge)
 
 router.route("/judge/submissions").get(VerifyJWT, allowRoles("judge"), getJudgeSubmissions);
+router.route("/judge/submissions/:submissionId").get(VerifyJWT , allowRoles("judge") , getJudgeSingleSubmission)
 router.route("/judge/:hackathonId/submissions").get(VerifyJWT, allowRoles("judge"), getJudgeHackathonSubmissions);
 router.route("/judge/round/:roundId/submissions").get(VerifyJWT, allowRoles("judge"), getJudgeRoundSubmissions);
 

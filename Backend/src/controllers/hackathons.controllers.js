@@ -601,6 +601,30 @@ const getJudgeSubmissions = asyncHandler(async (req, res) => {
   );
 });
 
+const getJudgeSingleSubmission = asyncHandler(async (req, res) => {
+  const { submissionId } = req.params;
+
+  const submission = await Submission.findById(submissionId)
+    .populate({
+      path: "round",
+      populate: {
+        path: "criteria"   // ✅ populate criteria THROUGH round
+      }
+    })
+    .populate("team", "name projectName")
+    .populate("submittedBy", "name email")
+    .populate("hackathon", "title");
+
+  if (!submission) {
+    throw new apiError(404, "Submission not found");
+  }
+
+  res.status(200).json(
+    new ApiResponse(200, submission, "Submission fetched")
+  );
+});
+
+
 const getJudgeHackathonSubmissions = asyncHandler(async (req, res) => {
   const { hackathonId } = req.params;
   const judge = req.user;
@@ -681,5 +705,6 @@ export {
   getJudgeSubmissions,
   getJudgeRoundSubmissions,
   getJudgeHackathonSubmissions,
-  judgeInHackathons
+  judgeInHackathons,
+  getJudgeSingleSubmission
 };
