@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Info, Save, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,23 +35,49 @@ const Scorecard = ({
   onSave,
   isSubmitting = false,
 }: ScorecardProps) => {
-  const [scores, setScores] = useState<Record<string, { score: number; comments: string }>>(() => {
+  const buildScoresFromInitial = () => {
     const initial: Record<string, { score: number; comments: string }> = {};
     criteria.forEach((c) => {
-      const existing = initialScores.find((s) => 
-        typeof s.criteria === 'string' ? s.criteria === c._id : s.criteria._id === c._id
-      );
+      // Handle different formats: criteria can be string ID, object with _id, or object with id
+      const existing = initialScores.find((s) => {
+        const criteriaId = typeof s.criteria === 'string' 
+          ? s.criteria 
+          : (s.criteria?._id || (s.criteria as any)?.id);
+        return criteriaId === c._id;
+      });
       initial[c._id] = {
         score: existing?.score ?? 0,
         comments: existing?.comments ?? '',
       };
     });
     return initial;
-  });
+  };
+
+  const [scores, setScores] = useState<Record<string, { score: number; comments: string }>>(buildScoresFromInitial);
+
+  // Update scores when initialScores changes (e.g., when existing evaluation loads)
+  useEffect(() => {
+    if (initialScores.length > 0) {
+      setScores(buildScoresFromInitial());
+    }
+  }, [initialScores, criteria]);
 
   const [feedback, setFeedback] = useState(initialFeedback);
   const [strengthsText, setStrengthsText] = useState(initialStrengths.join('\n'));
   const [improvementsText, setImprovementsText] = useState(initialImprovements.join('\n'));
+
+  // Update feedback fields when initial values change
+  useEffect(() => {
+    setFeedback(initialFeedback);
+  }, [initialFeedback]);
+
+  useEffect(() => {
+    setStrengthsText(initialStrengths.join('\n'));
+  }, [initialStrengths]);
+
+  useEffect(() => {
+    setImprovementsText(initialImprovements.join('\n'));
+  }, [initialImprovements]);
 
   const totalScore = useMemo(() => {
     return criteria.reduce((sum, c) => sum + (scores[c._id]?.score || 0), 0);

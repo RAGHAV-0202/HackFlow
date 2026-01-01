@@ -138,11 +138,14 @@ const EvaluateSubmissionEnhanced = () => {
     typeof c === 'object' && c !== null && '_id' in c
   ) || [];
 
-  // Get initial values from existing evaluation
-  const initialScores = existingEvaluation?.scores || [];
-  const initialFeedback = existingEvaluation?.feedback || '';
-  const initialStrengths = existingEvaluation?.strengths || [];
-  const initialImprovements = existingEvaluation?.improvements || [];
+  // Get initial values from existing evaluation - handle nested data structure
+  const initialScores = existingEvaluation?.scores || existingEvaluation?.data?.scores || [];
+  const initialFeedback = existingEvaluation?.feedback || existingEvaluation?.data?.feedback || '';
+  const initialStrengths = existingEvaluation?.strengths || existingEvaluation?.data?.strengths || [];
+  const initialImprovements = existingEvaluation?.improvements || existingEvaluation?.data?.improvements || [];
+  
+  console.log('Existing evaluation:', existingEvaluation);
+  console.log('Initial scores:', initialScores);
 
   return (
     <div className="space-y-6">

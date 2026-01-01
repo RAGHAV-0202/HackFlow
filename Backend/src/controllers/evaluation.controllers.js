@@ -184,10 +184,6 @@ export const evaluateSubmission = asyncHandler(async (req, res) => {
   );
 });
 
-
-
-
-
 // Get evaluation by ID
 export const getEvaluationById = asyncHandler(async (req, res) => {
   const { id } = req.params;

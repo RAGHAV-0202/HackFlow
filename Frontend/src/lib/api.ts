@@ -1,7 +1,6 @@
 import axios, { AxiosError } from 'axios';
 
-// const API_BASE_URL = 'https://hackflow-production.up.railway.app/api';
-const API_BASE_URL = "http://localhost:4000/api"
+const API_BASE_URL = 'https://hackflow-production.up.railway.app/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
