@@ -7,45 +7,88 @@ import SubmissionViewer from '@/components/common/SubmissionViewer';
 import Scorecard from '@/components/common/Scorecard';
 import { submissionApi, evaluationApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-import { Submission, Criteria, Round } from '@/types';
+import { Submission, Criteria, Round, Score } from '@/types';
+
+interface EvaluationData {
+  scores: Score[];
+  feedback: string;
+  strengths: string[];
+  improvements: string[];
+  status: 'draft' | 'submitted';
+}
 
 const EvaluateSubmissionEnhanced = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [submission, setSubmission] = useState<Submission | null>(null);
+  const [existingEvaluation, setExistingEvaluation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (id) {
-      fetchSubmission();
+      fetchSubmissionData();
     }
   }, [id]);
 
-  const fetchSubmission = async () => {
+  const fetchSubmissionData = async () => {
     try {
-      const response: any = await submissionApi.getById(id!);
+      // Fetch submission and check for existing evaluation in parallel
+      const [submissionResponse, evaluationsResponse]: any = await Promise.all([
+        submissionApi.getById(id!),
+        evaluationApi.getBySubmission(id!).catch(() => ({ data: { evaluations: [] } }))
+      ]);
+
       // API returns { data: { data: {...} } } with axios wrapper
-      const submissionData = response.data?.data || response.data;
+      const submissionData = submissionResponse.data?.data || submissionResponse.data || submissionResponse;
       setSubmission(submissionData);
+
+      // Check for existing evaluation by current judge
+      const evaluations = evaluationsResponse?.data?.evaluations || evaluationsResponse?.evaluations || [];
+      const userStr = localStorage.getItem('user');
+      if (userStr && evaluations.length > 0) {
+        const user = JSON.parse(userStr);
+        const myEvaluation = evaluations.find((e: any) => 
+          e.judge?._id === user._id || e.judge === user._id
+        );
+        if (myEvaluation) {
+          setExistingEvaluation(myEvaluation);
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch submission:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load submission data.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSave = async (data: {
-    scores: any[];
-    feedback: string;
-    strengths: string[];
-    improvements: string[];
-    status: 'draft' | 'submitted';
-  }) => {
+  const handleSave = async (data: EvaluationData) => {
+    if (!id) return;
+    
     setSubmitting(true);
     try {
-      await evaluationApi.submitEvaluation(id!, data);
+      // Transform scores to match backend expected format
+      const formattedScores = data.scores.map(score => ({
+        criteria: typeof score.criteria === 'string' ? score.criteria : score.criteria._id,
+        score: score.score,
+        maxScore: score.maxScore,
+        weight: score.weight,
+        comments: score.comments || ''
+      }));
+
+      await evaluationApi.submitEvaluation(id, {
+        scores: formattedScores,
+        feedback: data.feedback,
+        strengths: data.strengths,
+        improvements: data.improvements,
+        status: data.status
+      });
       
       toast({
         title: data.status === 'submitted' ? 'Evaluation submitted' : 'Draft saved',
@@ -59,9 +102,10 @@ const EvaluateSubmissionEnhanced = () => {
         navigate('/judge/evaluations');
       }
     } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to save evaluation.';
       toast({
         title: 'Error',
-        description: error.message || 'Failed to save evaluation.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -89,7 +133,16 @@ const EvaluateSubmissionEnhanced = () => {
   }
 
   const round = submission.round as Round;
-  const criteria: Criteria[] = round?.criteria || [];
+  // Handle criteria - can be populated objects or just IDs
+  const criteria: Criteria[] = round?.criteria?.filter((c): c is Criteria => 
+    typeof c === 'object' && c !== null && '_id' in c
+  ) || [];
+
+  // Get initial values from existing evaluation
+  const initialScores = existingEvaluation?.scores || [];
+  const initialFeedback = existingEvaluation?.feedback || '';
+  const initialStrengths = existingEvaluation?.strengths || [];
+  const initialImprovements = existingEvaluation?.improvements || [];
 
   return (
     <div className="space-y-6">
@@ -104,7 +157,7 @@ const EvaluateSubmissionEnhanced = () => {
         </Button>
 
         <h1 className="text-2xl font-heading font-bold text-foreground">
-          Evaluate Submission
+          {existingEvaluation ? 'Edit Evaluation' : 'Evaluate Submission'}
         </h1>
         <p className="text-muted-foreground">
           {submission.team?.name} - {round?.name || 'Unknown Round'}
@@ -133,6 +186,10 @@ const EvaluateSubmissionEnhanced = () => {
           {criteria.length > 0 ? (
             <Scorecard
               criteria={criteria}
+              initialScores={initialScores}
+              initialFeedback={initialFeedback}
+              initialStrengths={initialStrengths}
+              initialImprovements={initialImprovements}
               onSave={handleSave}
               isSubmitting={submitting}
             />
